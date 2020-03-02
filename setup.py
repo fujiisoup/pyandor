@@ -29,7 +29,6 @@ setup(name='pyandor',
       py_modules=['pyandor.__init__'],
       test_suite='tests',
       install_requires="""
-        pillow>=6.0
         """,
       classifiers=['License :: OSI Approved :: BSD License',
                    'Natural Language :: English',

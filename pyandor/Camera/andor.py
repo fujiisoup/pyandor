@@ -16,7 +16,6 @@
 
 import platform
 from ctypes import *
-from PIL import Image
 import sys, os
 
 """Andor class which is meant to provide the Python version of the same
@@ -26,7 +25,7 @@ import sys, os
    gain, gainRange, status etc. are stored in the class. """
 
 class Andor:
-    def __init__(self):
+    def __init__(self, verbose=False):
 
         # Check operating system and load library
         # for Windows
@@ -42,7 +41,7 @@ class Andor:
         else:
             raise IOError("Cannot detect operating system, wil now stop")
 
-        self.verbosity = True
+        self.verbosity = verbose
         self.status = self.Initialize()
 
         cw = c_int()
@@ -217,6 +216,13 @@ class Andor:
         self.SetImage(1,1,1,self.width,1,self.height)
 
     def SetCoolerMode(self, mode):
+        """
+        This function determines whether the cooler is switched off when the camera is shut
+        down.
+        Parameters int mode:
+        1 – Temperature is maintained on ShutDown
+        0 – Returns to ambient temperature on ShutDown
+        """
         error = self.dll.SetCoolerMode(mode)
         self.verbose(ERROR_CODE[error], sys._getframe().f_code.co_name)
         return ERROR_CODE[error]
@@ -230,6 +236,8 @@ class Andor:
         return ERROR_CODE[error]
 
     def SaveAsBmp(self, path):
+        from PIL import Image
+
         im=Image.new("RGB",(self.width,self.height),"white")
         pix = im.load()
 
@@ -284,6 +292,11 @@ class Andor:
         return ERROR_CODE[error]
 
     def IsCoolerOn(self):
+        """
+        This function checks the status of the cooler.
+        0: Cooler is OFF.
+        1: Cooler is ON. 
+        """
         iCoolerStatus = c_int()
         self.cooler = iCoolerStatus
         error = self.dll.IsCoolerOn(byref(iCoolerStatus))
@@ -374,7 +387,8 @@ class Andor:
         HSSpeed = c_float()
 
         self.HSSpeeds = []
-
+        if getattr(self, 'noHSSpeeds', None) is None:
+            self.GetNumberHSSpeeds()
         for i in range(self.noHSSpeeds):
             self.dll.GetHSSpeed(self.channel, self.outamp, i, byref(HSSpeed))
             self.HSSpeeds.append(HSSpeed.value)
@@ -393,15 +407,22 @@ class Andor:
         return ERROR_CODE[error]
 
     def GetVSSpeed(self):
+        """
+        Get the actual speeds available. The value returned is in microseconds.
+        """
         VSSpeed = c_float()
 
         self.VSSpeeds = []
-
+        if getattr(self, 'noVSSpeeds', None) is None:
+            self.GetNumberVSSpeeds()
         for i in range(self.noVSSpeeds):
             self.dll.GetVSSpeed(i,byref(VSSpeed))
-            self.preVSpeeds.append(VSSpeed.value)
+            self.VSSpeeds.append(VSSpeed.value)
 
     def SetVSSpeed(self, index):
+        """
+        Set the vertical speed to be used for subsequent acquisitions 
+        """
         error = self.dll.SetVSSpeed(index)
         self.verbose(ERROR_CODE[error], sys._getframe().f_code.co_name)
         self.vsspeed = index
