@@ -31,9 +31,11 @@ class Andor:
         # for Windows
         if platform.system() == "Windows":
             if platform.architecture()[0] == "32bit":
-                self.dll = windll.LoadLibrary("C:\\Program Files (x86)\\Andor SOLIS\\atmcd32d.dll")
+                self.dll = windll.LoadLibrary(
+                    "C:\\Program Files (x86)\\Andor SOLIS\\atmcd32d.dll")
             else:
-                self.dll = CDLL("C:\\Program Files\\Andor SOLIS\\atmcd64d.dll")
+                self.dll = windll.LoadLibrary(
+                    "C:\\Program Files\\Andor SOLIS\\atmcd64d_legacy.dll")
         # for Linux
         elif platform.system() == "Linux":
             dllname = "/usr/local/lib/libandor.so"
